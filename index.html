@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NU Notice Board</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+<style>
+body{font-family:'Google Sans',sans-serif;background:#f5f7fb}
+.tab.active{background:#047857;color:white}
+.notice{transition:.2s;animation:fade .25s ease}
+.notice:hover{transform:translateY(-2px);box-shadow:0 8px 25px #0001}
+#warningModal[hidden]{display:none}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body class="min-h-screen text-slate-800">
+
+<header class="bg-gradient-to-r from-emerald-950 to-teal-600 text-white">
+<div class="max-w-6xl mx-auto px-4 py-8">
+<div class="flex flex-wrap items-center justify-between gap-4">
+<div>
+<p class="text-sm text-emerald-200">NATIONAL UNIVERSITY BANGLADESH</p>
+<h1 class="text-3xl sm:text-4xl font-bold mt-2">NU Notice Board</h1>
+<p class="mt-2 text-emerald-100">জাতীয় বিশ্ববিদ্যালয়ের নোটিশ বোর্ড</p>
+</div>
+<button id="refresh" type="button" class="inline-flex shrink-0 items-center gap-2 rounded-xl bg-white px-5 py-3 font-bold text-emerald-900 disabled:cursor-wait disabled:opacity-70">
+<span aria-hidden="true">↻</span><span id="refreshText">Refresh Data</span>
+</button>
+</div>
+
+<div role="note" class="mt-6 rounded-xl border border-amber-300 bg-amber-100 p-4 text-amber-950">
+<p class="font-bold">⚠️ সতর্কীকরণ</p>
+<p class="mt-1 text-sm">এই সাইটটি আমার ব্যক্তিগত ব্যবহারের জন্য তৈরি; এটি জাতীয় বিশ্ববিদ্যালয়ের (NU) অফিসিয়াল ওয়েবসাইট নয়। গুরুত্বপূর্ণ তথ্য অবশ্যই জাতীয় বিশ্ববিদ্যালয়ের অফিসিয়াল ওয়েবসাইট বা মূল PDF থেকে যাচাই করুন।</p>
+</div>
+
+<div class="grid sm:grid-cols-3 gap-3 mt-7">
+<div class="rounded-xl bg-white/10 p-4">
+<p class="text-sm text-emerald-100">মোট নোটিশ</p>
+<p id="total" class="text-3xl font-bold mt-1">0</p>
+</div>
+<div class="rounded-xl bg-white/10 p-4">
+<p class="text-sm text-emerald-100">সার্চের ফলাফল</p>
+<p id="results" class="text-3xl font-bold mt-1">0</p>
+</div>
+<div class="rounded-xl bg-white/10 p-4">
+<p class="text-sm text-emerald-100">সর্বশেষ আপডেট</p>
+<p id="updated" class="text-lg font-bold mt-2">—</p>
+</div>
+</div>
+</div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 py-7">
+
+<h2 class="text-2xl font-bold">নোটিশ ক্যাটাগরি</h2>
+<div class="grid sm:grid-cols-2 gap-3 mt-4">
+<button data-type="degree" class="tab active rounded-2xl border bg-white p-5 text-left flex items-center gap-4">
+<span class="text-3xl">🎓</span>
+<span class="flex-1">
+<strong class="block">Degree Pass Notices</strong>
+<span class="text-sm opacity-75">ডিগ্রি পাস পরীক্ষার নোটিশ</span>
+</span>
+<span id="degreeCount" class="rounded-lg bg-emerald-100 text-emerald-800 px-3 py-1">0</span>
+</button>
+
+<button data-type="latest" class="tab rounded-2xl border bg-white p-5 text-left flex items-center gap-4">
+<span class="text-3xl">📢</span>
+<span class="flex-1">
+<strong class="block">Latest NU Notices</strong>
+<span class="text-sm opacity-75">সর্বশেষ প্রকাশিত নোটিশ</span>
+</span>
+<span id="latestCount" class="rounded-lg bg-blue-100 text-blue-800 px-3 py-1">0</span>
+</button>
+</div>
+
+<section class="mt-6 rounded-2xl border bg-white p-5">
+<h2 class="text-xl font-bold">🔎 নোটিশ খুঁজুন</h2>
+<form id="searchForm" class="grid sm:grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+<div class="md:col-span-2">
+<label class="block text-sm mb-1">নোটিশের শিরোনাম</label>
+<input id="query" type="search" placeholder="পরীক্ষার ফলাফল, ফরম পূরণ..."
+class="w-full border rounded-xl px-4 py-3 outline-none focus:border-emerald-600">
+</div>
+<div>
+<label class="block text-sm mb-1">তারিখ থেকে</label>
+<input id="from" type="date" class="w-full border rounded-xl px-3 py-3">
+</div>
+<div>
+<label class="block text-sm mb-1">তারিখ পর্যন্ত</label>
+<input id="to" type="date" class="w-full border rounded-xl px-3 py-3">
+</div>
+<div class="flex gap-2 md:col-span-4">
+<button class="bg-emerald-700 text-white rounded-xl px-5 py-3 font-semibold">Search Notices</button>
+<button id="clear" type="button" class="border rounded-xl px-5 py-3">Clear</button>
+</div>
+</form>
+</section>
+
+<div class="flex items-center justify-between gap-3 mt-8">
+<h2 id="heading" class="text-xl sm:text-2xl font-bold">ডিগ্রি পাসের নোটিশ</h2>
+<span id="count" class="bg-emerald-100 text-emerald-800 rounded-full px-3 py-2 text-sm">0 টি</span>
+</div>
+
+<div id="status" class="text-center py-10 text-slate-500">নোটিশ লোড হচ্ছে...</div>
+<div id="noticeList" class="space-y-3 mt-4"></div>
+<nav id="pagination" class="flex flex-wrap justify-center gap-2 mt-7"></nav>
+
+<footer class="mt-10 rounded-2xl bg-slate-900 p-6 text-white">
+<h3 class="font-bold">🏛️ Source</h3>
+<p class="mt-2 text-sm text-slate-300">গুরুত্বপূর্ণ তথ্য মূল PDF থেকে যাচাই করে নেবে।</p>
+<a id="source" href="https://www.nu.ac.bd" target="_blank" rel="noopener noreferrer" class="inline-block mt-3 text-emerald-300 underline">Source Link ↗</a>
+<p class="mt-6 border-t border-white/10 pt-4 text-xs text-slate-400">© <span id="year"></span> NU Notice Board</p>
+</footer>
+</main>
+
+<div id="warningModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4" role="dialog" aria-modal="true" aria-labelledby="warningTitle" aria-describedby="warningMessage" hidden>
+<div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl sm:p-8">
+<h2 id="warningTitle" class="text-xl font-bold text-amber-800">⚠️ গুরুত্বপূর্ণ সতর্কীকরণ</h2>
+<p id="warningMessage" class="mt-4 leading-relaxed text-slate-700">এই সাইটটি আমার ব্যক্তিগত ব্যবহারের জন্য তৈরি; এটি জাতীয় বিশ্ববিদ্যালয়ের (NU) কোনো অফিসিয়াল ওয়েবসাইট নয়। এখানে থাকা নোটিশ ও তথ্য সহায়ক উদ্দেশ্যে দেওয়া হয়েছে। যেকোনো গুরুত্বপূর্ণ তথ্য জাতীয় বিশ্ববিদ্যালয়ের অফিসিয়াল ওয়েবসাইট (nu.ac.bd) অথবা প্রকাশিত মূল PDF থেকে যাচাই করে নিন।</p>
+<button id="dismissWarning" type="button" class="mt-6 w-full rounded-xl bg-emerald-700 px-5 py-3 font-bold text-white hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2">বুঝেছি, সাইটে প্রবেশ করুন</button>
+</div>
+</div>
+
+<script>
+const FILES={
+  degree:"data/degnot.json",
+  latest:"data/latnot.json"
+};
+const PAGE_SIZE=10;
+
+let category="degree";
+let datasets={degree:[],latest:[]};
+let metadata={degree:{},latest:{}};
+let page=1;
+let query="";
+let dateFrom="";
+let dateTo="";
+let loading=false;
+
+const $=id=>document.getElementById(id);
+
+function normalizeDate(value){
+  if(!value)return "";
+  const s=String(value);
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  const d=new Date(s);
+  if(Number.isNaN(d.getTime()))return "";
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+
+function formatDate(value){
+  const iso=normalizeDate(value);
+  if(!iso)return value||"তারিখ উল্লেখ নেই";
+  return new Intl.DateTimeFormat("bn-BD",{
+    day:"numeric",month:"long",year:"numeric"
+  }).format(new Date(iso+"T12:00:00"));
+}
+
+function formatUpdated(value){
+  if(!value)return "তথ্য নেই";
+  let d;
+  if(typeof value==="number"||/^\d+$/.test(String(value))){
+    const n=Number(value);
+    d=new Date(n<1e12?n*1000:n);
+  }else{
+    d=new Date(value);
+  }
+  if(Number.isNaN(d.getTime()))return "তথ্য নেই";
+  return new Intl.DateTimeFormat("bn-BD",{
+    dateStyle:"medium",timeStyle:"short"
+  }).format(d);
+}
+
+function safeUrl(value){
+  try{
+    const u=new URL(value);
+    return ["https:","http:"].includes(u.protocol)?u.href:"";
+  }catch{return "";}
+}
+
+async function loadData(type,force=false){
+  const response=await fetch(FILES[type],{
+    cache:force?"no-store":"default"
+  });
+  if(!response.ok)throw new Error(FILES[type]+" লোড হয়নি। HTTP "+response.status);
+
+  const json=await response.json();
+  const notices=Array.isArray(json)?json:json?.notices;
+
+  if(!Array.isArray(notices))throw new Error("JSON ফরম্যাট সঠিক নয়।");
+
+  datasets[type]=notices.map(n=>({
+    title:String(n.title||"শিরোনাম নেই"),
+    date:n.date_iso||n.date||n.publish_date||"",
+    url:safeUrl(n.url||n.pdf_url||"")
+  }));
+
+  metadata[type]=Array.isArray(json)?{
+    total:notices.length,
+    source:"https://www.nu.ac.bd",
+    updated_at:null
+  }:{
+    total:Number.isFinite(Number(json.total))?Number(json.total):notices.length,
+    source:json.source||"https://www.nu.ac.bd",
+    updated_at:json.updated_at||null
+  };
+}
+
+function filteredNotices(){
+  const q=query.trim().toLocaleLowerCase();
+  return datasets[category].filter(n=>{
+    const titleMatch=!q||n.title.toLocaleLowerCase().includes(q);
+    const d=normalizeDate(n.date);
+    const fromMatch=!dateFrom||(d&&d>=dateFrom);
+    const toMatch=!dateTo||(d&&d<=dateTo);
+    return titleMatch&&fromMatch&&toMatch;
+  });
+}
+
+function element(tag,text,className=""){
+  const el=document.createElement(tag);
+  el.textContent=text;
+  el.className=className;
+  return el;
+}
+
+function render(){
+  const all=datasets[category];
+  const filtered=filteredNotices();
+  const pages=Math.max(1,Math.ceil(filtered.length/PAGE_SIZE));
+  page=Math.min(page,pages);
+
+  $("total").textContent=metadata[category].total??all.length;
+  $("results").textContent=filtered.length;
+  $("count").textContent=filtered.length+" টি নোটিশ";
+  $("degreeCount").textContent=datasets.degree.length;
+  $("latestCount").textContent=datasets.latest.length;
+  $("updated").textContent=formatUpdated(metadata[category].updated_at);
+  $("heading").textContent=category==="degree"?"ডিগ্রি পাসের নোটিশ":"সর্বশেষ জাতীয় বিশ্ববিদ্যালয়ের নোটিশ";
+
+  $("source").href=safeUrl(metadata[category].source)||
+    "https://www.nu.ac.bd";
+
+  document.querySelectorAll("[data-type]").forEach(btn=>{
+    btn.classList.toggle("active",btn.dataset.type===category);
+  });
+
+  const list=$("noticeList");
+  const nav=$("pagination");
+  list.replaceChildren();
+  nav.replaceChildren();
+
+  if(loading)return;
+
+  if(filtered.length===0){
+    $("status").classList.remove("hidden");
+    $("status").textContent="🔎 কোনো নোটিশ পাওয়া যায়নি। অন্য শব্দ বা তারিখ দিয়ে সার্চ করো।";
+    return;
+  }
+
+  $("status").classList.add("hidden");
+
+  filtered.slice((page-1)*PAGE_SIZE,page*PAGE_SIZE).forEach(n=>{
+    const card=element("article","","notice rounded-2xl border bg-white p-5");
+    const row=element("div","","flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between");
+    const info=element("div","","flex min-w-0 gap-3");
+    const icon=element("div","📄","flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-2xl");
+    const content=element("div","","min-w-0 flex-1");
+    const badge=element("span",category==="degree"?"DEGREE PASS":"LATEST NOTICE","inline-block rounded bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-800");
+    const title=element("h3",n.title,"mt-2 break-words text-lg font-semibold leading-relaxed");
+    const date=element("p","📅 "+formatDate(n.date),"mt-2 text-sm text-slate-500");
+
+    content.append(badge,title,date);
+    info.append(icon,content);
+
+    let pdf;
+    if(n.url){
+      pdf=element("a","↓ PDF দেখুন","flex h-12 w-36 shrink-0 self-end items-center justify-center whitespace-nowrap rounded-xl bg-emerald-700 px-5 text-center font-semibold text-white hover:bg-emerald-800 sm:self-auto");
+      pdf.href=n.url;
+      pdf.target="_blank";
+      pdf.rel="noopener noreferrer";
+    }else{
+      pdf=element("span","PDF নেই","flex h-12 w-36 shrink-0 self-end items-center justify-center whitespace-nowrap rounded-xl bg-slate-100 px-5 text-center text-slate-400 sm:self-auto");
+    }
+
+    row.append(info,pdf);
+    card.append(row);
+    list.append(card);
+  });
+
+  if(pages>1){
+    function addPage(label,p,active=false,disabled=false){
+      const b=element("button",label,active?
+        "rounded-lg bg-emerald-700 px-4 py-3 font-bold text-white":
+        "rounded-lg border bg-white px-4 py-3 hover:bg-emerald-50 disabled:opacity-40");
+      b.disabled=disabled;
+      if(!active&&!disabled)b.onclick=()=>{page=p;render();};
+      nav.append(b);
+    }
+
+    addPage("← আগের",page-1,false,page===1);
+    for(let p=1;p<=pages;p++){
+      if(p===1||p===pages||Math.abs(p-page)<=1){
+        addPage(String(p),p,p===page);
+      }else if(p===page-2||p===page+2){
+        nav.append(element("span","...","px-1 py-3"));
+      }
+    }
+    addPage("পরের →",page+1,false,page===pages);
+  }
+}
+
+async function switchCategory(type,force=false){
+  if(loading)return;
+  category=type;
+  page=1;
+  loading=true;
+  $("status").classList.remove("hidden");
+  $("status").textContent="নোটিশ লোড হচ্ছে...";
+  $("noticeList").replaceChildren();
+  $("pagination").replaceChildren();
+
+  try{
+    await loadData(type,force);
+    $("status").classList.add("hidden");
+  }catch(err){
+    $("status").classList.remove("hidden");
+    $("status").textContent="⚠️ "+err.message+" — সার্ভার ও JSON ফাইল পরীক্ষা করো।";
+  }finally{
+    loading=false;
+    render();
+  }
+}
+
+document.querySelectorAll("[data-type]").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    if(btn.dataset.type!==category)switchCategory(btn.dataset.type);
+  });
+});
+
+$("searchForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  query=$("query").value;
+  dateFrom=$("from").value;
+  dateTo=$("to").value;
+
+  if(dateFrom&&dateTo&&dateFrom>dateTo){
+    alert("শুরুর তারিখ শেষের তারিখের পরে হতে পারবে না।");
+    return;
+  }
+
+  page=1;
+  render();
+});
+
+$("query").addEventListener("input",()=>{
+  query=$("query").value;
+  page=1;
+  render();
+});
+
+$("clear").addEventListener("click",()=>{
+  $("searchForm").reset();
+  query="";
+  dateFrom="";
+  dateTo="";
+  page=1;
+  render();
+});
+
+$("refresh").addEventListener("click",async()=>{
+  if(loading)return;
+  loading=true;
+  $("refresh").disabled=true;
+  $("refresh").setAttribute("aria-busy","true");
+  $("refreshText").textContent="Loading...";
+  let refreshSucceeded=false;
+
+  try{
+    const results=await Promise.allSettled([
+      loadData("degree",true),
+      loadData("latest",true)
+    ]);
+
+    const failed=results.find(r=>r.status==="rejected");
+    if(failed)throw failed.reason;
+
+    $("status").classList.add("hidden");
+    refreshSucceeded=true;
+  }catch(err){
+    $("status").classList.remove("hidden");
+    $("status").textContent="⚠️ "+err.message;
+  }finally{
+    loading=false;
+    $("refresh").disabled=false;
+    $("refresh").removeAttribute("aria-busy");
+    $("refreshText").textContent="Refresh Data";
+    if(refreshSucceeded)render();
+  }
+});
+
+$("year").textContent=new Date().getFullYear();
+
+const warningModal=$("warningModal");
+const warningStorageKey="nuNoticeBoardUnofficialWarningAccepted";
+
+try{
+  if(localStorage.getItem(warningStorageKey)!=="true"){
+    warningModal.hidden=false;
+    $("dismissWarning").focus();
+  }
+}catch(error){
+  console.error("সতর্কবার্তার সম্মতি ব্রাউজারে পড়া যায়নি।",error);
+  warningModal.hidden=false;
+  $("dismissWarning").focus();
+}
+
+$("dismissWarning").addEventListener("click",()=>{
+  try{
+    localStorage.setItem(warningStorageKey,"true");
+  }catch(error){
+    console.error("সতর্কবার্তার সম্মতি ব্রাউজারে সংরক্ষণ করা যায়নি।",error);
+  }
+  warningModal.hidden=true;
+});
+
+switchCategory("degree");
+</script>
+</body>
+</html>
