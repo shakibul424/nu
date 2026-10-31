@@ -194,10 +194,15 @@ async function loadData(type,force=false){
   if(!Array.isArray(notices))throw new Error("JSON ফরম্যাট সঠিক নয়।");
 
   datasets[type]=notices.map(n=>({
-    title:String(n.title||"শিরোনাম নেই"),
-    date:n.date_iso||n.date||n.publish_date||"",
-    url:safeUrl(n.url||n.pdf_url||"")
-  }));
+      title:String(n.title||"শিরোনাম নেই"),
+      date:n.date_iso||n.date||n.publish_date||"",
+      url:safeUrl(n.url||n.pdf_url||"")
+  })).sort((a,b)=>{
+      const dateA=normalizeDate(a.date);
+      const dateB=normalizeDate(b.date);
+
+      return dateB.localeCompare(dateA);
+  });
 
   metadata[type]=Array.isArray(json)?{
     total:notices.length,
