@@ -1,10 +1,16 @@
 {
   "source": "https://www.nu.ac.bd/examination-notice.php",
   "category": "degree_pass",
-  "updated_at": 1793500245,
-  "total": 854,
-  "new_count": 0,
+  "updated_at": 1793543446,
+  "total": 855,
+  "new_count": 1,
   "notices": [
+    {
+      "title": "২০২৫ সালের ডিগ্রি পাস ও সার্টিফিকেট কোর্স ১ম বর্ষ পরীক্ষার জন্য গৃহীত ট্রাংক ফেরত প্রদান প্রসঙ্গে।",
+      "date": "November 01, 2026",
+      "date_iso": "2026-11-01",
+      "url": "https://www.nu.ac.bd/uploads/notices/notice_2817_pub_date_11012026.PDF"
+    },
     {
       "title": "২০২৫ সালের ডিগ্রি (পাস) ও সার্টিফিকেট কোর্স ২য় বর্ষ পরীক্ষার ফরম পূরণ ও ইনকোর্স নম্বর এন্ট্রির সময় বৃদ্ধি সংক্রান্ত বিজ্ঞপ্তি।",
       "date": "October 28, 2026",
