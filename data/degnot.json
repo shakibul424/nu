@@ -1,10 +1,16 @@
 {
   "source": "https://www.nu.ac.bd/examination-notice.php",
   "category": "degree_pass",
-  "updated_at": 1794709846,
-  "total": 858,
-  "new_count": 0,
+  "updated_at": 1794753040,
+  "total": 859,
+  "new_count": 1,
   "notices": [
+    {
+      "title": "২০২৫ সালের ডিগ্রী (পাস) ও সার্টিফিকেট কোর্স ২য় বর্ষ পরীক্ষার প্রবেশপত্র মুদ্রণ ও বিতরণ সংক্রান্ত বিজ্ঞপ্তি।",
+      "date": "November 15, 2026",
+      "date_iso": "2026-11-15",
+      "url": "https://www.nu.ac.bd/uploads/notices/notice_6129_pub_date_15112026.pdf"
+    },
     {
       "title": "২০২৪ সালের ডিগ্রী (পাস) ও সার্টিফিকেট কোর্স ২য় বর্ষ পরীক্ষার মূল্যায়িত উত্তরপত্রসমূহ বিক্রয় সংক্রান্ত বিজ্ঞপ্তি।",
       "date": "November 08, 2026",
